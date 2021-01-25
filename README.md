@@ -14,3 +14,24 @@ $ cd archman
 
 And there should be the 'archman' file. If you want to be able to invoke it at
 any time, move it to a directory that is on $PATH
+
+## Usage
+
+Simply, just run:
+
+```
+$ archman <man_page(s)>
+```
+
+and it will fetch you the manual page or give an error if it can't find it.
+
+Additionally, you can specify a section to look in by appending a ".[section]"
+to a man page.
+
+For example:
+
+```
+$ archman init.1
+```
+
+will fetch you the manual page for systemd in section 1
