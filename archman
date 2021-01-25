@@ -1,5 +1,7 @@
 #!/usr/bin/sh
 
+# Download man pages from https://man.archlinux.org
+
 # Basic info about program
 PROGRAM_NAME=$(basename $0)
 PROGRAM_VERSION="1.0.0"
@@ -10,26 +12,26 @@ CACHE_PLACE="$XDG_CACHE_HOME/${PROGRAM_NAME}"
 
 fetch_man_page() {
     local pkg=$1
-    
+        
     if [[ -f ${CACHE_PLACE}/${pkg} ]]; then
         echo "--> Manual for package is cached"
         ${PAGER} ${CACHE_PLACE}/${pkg}
         return 0
     fi
 
-    for i in {1..8} n l; do
-        curl ${MAN_ARCHLINUX}/man/${pkg}.$i.en.txt \
-            -o ${CACHE_PLACE}/$pkg &>/dev/null
-        if ! file ${CACHE_PLACE}/${pkg} | grep "HTML document" &>/dev/null &&
-            ! file ${CACHE_PLACE}/${pkg} | grep "empty" &>/dev/null; then
-            ${PAGER} ${CACHE_PLACE}/$pkg
-            return 0
-        else
-            echo "--> Man page for '${pkg}' not found"
-            rm -f ${CACHE_PLACE}/${pkg}
-            return 1
-        fi
-    done
+    curl ${MAN_ARCHLINUX}/man/${pkg}.en.txt \
+        -o ${CACHE_PLACE}/$pkg &>/dev/null
+    if ! file ${CACHE_PLACE}/${pkg} | grep "HTML document" &>/dev/null &&
+        ! file ${CACHE_PLACE}/${pkg} | grep "empty" &>/dev/null; then
+        ${PAGER} ${CACHE_PLACE}/$pkg
+        return 0
+    else
+        echo "--> Man page for '${pkg}' not found"
+        rm -f ${CACHE_PLACE}/${pkg}
+        return 1
+    fi
+
+    return 0
 }
 
 main() {
