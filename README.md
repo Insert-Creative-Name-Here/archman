@@ -31,7 +31,7 @@ to a man page.
 For example:
 
 ```
-$ archman init.1
+$ archman systemd.1
 ```
 
 will fetch you the manual page for systemd in section 1

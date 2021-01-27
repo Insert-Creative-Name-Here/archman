@@ -1,33 +1,50 @@
 #!/usr/bin/sh
 
-# Download man pages from https://man.archlinux.org
+# Download man pages from https://man.archlinux.org/man
 
-# Basic info about program
+# Some basic information
 PROGRAM_NAME=$(basename $0)
-PROGRAM_VERSION="1.0.0"
-
-# Info about manual page location
-MAN_ARCHLINUX="https://man.archlinux.org"
-CACHE_PLACE="$XDG_CACHE_HOME/${PROGRAM_NAME}"
+PROGRAM_VERSION="1.0.1"
+MAN_ARCHLINUX="https://man.archlinux.org/man"
+CACHE_PLACE="$XDG_CACHE_HOME/archman"
 
 fetch_man_page() {
-    local pkg=$1
+    local PAGE=$1
+    [[ ${PAGE} =~ .[0-9]$ ]] && local SECTION="${PAGE##*.}"
+    local PAGE="${PAGE%.*}"
         
-    if [[ -f ${CACHE_PLACE}/${pkg} ]]; then
-        echo "--> Manual for package is cached"
-        ${PAGER} ${CACHE_PLACE}/${pkg}
+    if [[ -f ${CACHE_PLACE}/${PAGE} ]]; then
+        echo "--> Manual for '${PAGE}' is cached"
+        ${PAGER} ${CACHE_PLACE}/${PAGE}
         return 0
     fi
 
-    curl ${MAN_ARCHLINUX}/man/${pkg}.en.txt \
-        -o ${CACHE_PLACE}/$pkg &>/dev/null
-    if ! file ${CACHE_PLACE}/${pkg} | grep "HTML document" &>/dev/null &&
-        ! file ${CACHE_PLACE}/${pkg} | grep "empty" &>/dev/null; then
-        ${PAGER} ${CACHE_PLACE}/$pkg
-        return 0
+    if [[ -z ${SECTION} ]]; then
+        for i in {1..8} 0 n l; do
+            curl ${MAN_ARCHLINUX}/${PAGE}.${i}.en.txt -o ${CACHE_PLACE}/${PAGE} &>/dev/null
+            if check_valid_page ${PAGE}; then
+                ${PAGER} ${CACHE_PLACE}/${PAGE}
+                return 0
+            fi
+        done
     else
-        echo "--> Man page for '${pkg}' not found"
-        rm -f ${CACHE_PLACE}/${pkg}
+        curl ${MAN_ARCHLINUX}/${PAGE}.${SECTION}.en.txt \
+        -o ${CACHE_PLACE}/${PAGE} &>/dev/null
+        if check_valid_page ${PAGE}; then
+            ${PAGER} ${CACHE_PLACE}/${PAGE}
+            return 0
+        fi
+        SECTION=" in section ${SECTION}"
+    fi
+
+    echo "--> man page for '${PAGE}'${SECTION} not found"
+    rm -f ${CACHE_PLACE}/${PAGE}
+    return 1
+}
+
+check_valid_page() {
+    if file ${CACHE_PLACE}/${1} | grep "HTML document" &>/dev/null ||
+        file ${CACHE_PLACE}/${1} | grep "empty" &>/dev/null; then
         return 1
     fi
 
@@ -35,6 +52,8 @@ fetch_man_page() {
 }
 
 main() {
+    [[ -z $@ ]] && echo "${PROGRAM_NAME}: expected argument" && exit 1
+
     [[ -d ${CACHE_PLACE} ]] || mkdir ${CACHE_PLACE}
 
     for ARG in $@; do
