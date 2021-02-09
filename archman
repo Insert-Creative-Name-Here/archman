@@ -17,7 +17,7 @@ CACHE_PLACE="${XDG_CACHE_HOME}/${PROGRAM_NAME}"
 ###
 fetch_man_page() {
     local PAGE=$1
-    [[ ${PAGE} =~ .[0-9]$ ]] && local SECTION="${PAGE##*.}"
+    [[ ${PAGE} =~ .[0-9nl]$ ]] && local SECTION="${PAGE##*.}"
     local PAGE="${PAGE%.*}"
         
     if [[ -f ${CACHE_PLACE}/${PAGE} ]]; then
@@ -55,10 +55,9 @@ fetch_man_page() {
 # Returns:      0 on success, 1 otherwise
 ###
 check_valid_page() {
-    if file ${CACHE_PLACE}/${1} | grep "HTML document" &>/dev/null ||
-        file ${CACHE_PLACE}/${1} | grep "empty" &>/dev/null; then
-        return 1
-    fi
+    [[ "$(file ${CACHE_PLACE}/${1})" =~ "HTML" ]] \
+        || [[ "$(file ${CACHE_PLACE}/${1})" =~ "empty" ]] \
+        && return 1
 
     return 0
 }
